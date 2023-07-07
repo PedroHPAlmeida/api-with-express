@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose.connect("mongodb+srv://app:<password>@cluster0.gefzxkn.mongodb.net/Cluster0");
+mongoose.connect(process.env.DB_CONNECTION_STRING);
 
 const db = mongoose.connection;
 
