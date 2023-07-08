@@ -1,11 +1,16 @@
 import mongoose from "mongoose";
+import BaseError from "../errors/BaseError.js";
+import BadRequestError from "../errors/BadRequestError.js";
+import ValidationError from "../errors/ValidationError.js";
 
 // eslint-disable-next-line no-unused-vars
 export default function handler(err, req, res, next) {
   console.error(err);
   if (err instanceof mongoose.Error.CastError) {
-    res.status(400).json({ message: "O id fornecido está incorreto." });
+    new BadRequestError().sendResponse(res);
+  } else if (err instanceof mongoose.Error.ValidationError) {
+    new ValidationError(err).sendResponse(res);
   } else {
-    res.status(500).json({ message: "Erro interno do servidor." });
+    new BaseError().sendResponse(res);
   }
 }

@@ -15,7 +15,13 @@ export default class BooksController {
     try {
       const id = req.params.id;
       const book = await books.findById(id).populate("author", "name");
-      res.status(200).json(book);
+      if (book !== null) {
+        res.status(200).json(book);
+      } else {
+        res
+          .status(404)
+          .json({ message: "Livro não encontrado." });
+      }
     } catch (error) {
       next(error);
     }
