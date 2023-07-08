@@ -1,63 +1,67 @@
 import authors from "../models/Author.js";
 
 export default class AuthorsController {
-  static findAllAuthors(_, res) {
-    authors.find((_, authors) => {
-      res.status(200).json(authors);
-    });
+
+  static async findAllAuthors(_, res) {
+    try {
+      const authorsResult = await authors.find();
+      res.status(200).json(authorsResult);
+    } catch (error) {
+      res.status(500).json({ message: "Erro interno no servidor" });
+    }
   }
 
-  static findAuthorById(req, res) {
-    authors.findById(req.params.id, (err, author) => {
-      if (err) {
-        res
-          .status(404)
-          .json({ message: `${err.message} - falha ao buscar autor.` });
-      } else {
-        res.status(200).json(author);
-      }
-    });
+  static async findAuthorById(req, res) {
+    try {
+      const id = req.params.id;
+      const author = await authors.findById(id);
+      res.status(200).json(author);
+    } catch (error) {
+      res
+        .status(404)
+        .json({ message: `${error.message} - falha ao buscar autor.` });
+    }
   }
 
-  static createAuthor(req, res) {
-    const author = new authors(req.body);
-    author.save((err) => {
-      if (err) {
-        res
-          .status(500)
-          .json({ message: `${err.message} - falha ao cadastrar autor.` });
-      } else {
-        res.status(201).json(author.toJSON());
-      }
-    });
+  static async createAuthor(req, res) {
+    try {
+      const body = req.body;
+      const author = await authors.create(new authors(body));
+      res.status(201).json(author.toJSON());
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: `${error.message} - falha ao cadastrar autor.` });
+    }
   }
 
-  static updateAuthorById(req, res) {
-    authors.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { returnDocument: "after" },
-      (err) => {
-        if (!err) {
-          res.status(204).send();
-        } else {
-          res
-            .status(500)
-            .json({ message: `${err.message} - falha ao atualizar autor.` });
-        }
-      }
-    );
+  static async updateAuthorById(req, res) {
+    try {
+      const id = req.params.id;
+      const body = req.body;
+      const authorUpdated = await authors.findByIdAndUpdate(
+        id,
+        { $set: body },
+        { returnDocument: "after" }
+      );
+      res.status(200).json(authorUpdated);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: `${error.message} - falha ao atualizar autor.` });
+    }
   }
 
-  static deleteAuthorById(req, res) {
-    authors.findByIdAndDelete(req.params.id, (err) => {
-      if (err) {
-        res
-          .status(404)
-          .json({ message: `${err.message} - falha ao deletar autor.` });
-      } else {
-        res.status(204).send();
-      }
-    });
+  static async deleteAuthorById(req, res) {
+    try {
+      const id = req.params.id;
+      await authors.findByIdAndDelete(id);
+      res.status(204).send();
+    } catch (error) {
+      res
+        .status(404)
+        .json({ message: `${error.message} - falha ao deletar autor.` });
+    }
   }
+
 }
