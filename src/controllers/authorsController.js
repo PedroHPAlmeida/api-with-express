@@ -11,31 +11,33 @@ export default class AuthorsController {
     }
   }
 
-  static async findAuthorById(req, res) {
+  static async findAuthorById(req, res, next) {
     try {
       const id = req.params.id;
       const author = await authors.findById(id);
-      res.status(200).json(author);
+      if (author !== null) {
+        res.status(200).json(author);
+      } else {
+        res
+          .status(404)
+          .json({ message: "Autor não encontrado." });
+      }
     } catch (error) {
-      res
-        .status(404)
-        .json({ message: `${error.message} - falha ao buscar autor.` });
+      next(error);
     }
   }
 
-  static async createAuthor(req, res) {
+  static async createAuthor(req, res, next) {
     try {
       const body = req.body;
       const author = await authors.create(new authors(body));
       res.status(201).json(author.toJSON());
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: `${error.message} - falha ao cadastrar autor.` });
+      next(error);
     }
   }
 
-  static async updateAuthorById(req, res) {
+  static async updateAuthorById(req, res, next) {
     try {
       const id = req.params.id;
       const body = req.body;
@@ -46,21 +48,17 @@ export default class AuthorsController {
       );
       res.status(200).json(authorUpdated);
     } catch (error) {
-      res
-        .status(500)
-        .json({ message: `${error.message} - falha ao atualizar autor.` });
+      next(error);
     }
   }
 
-  static async deleteAuthorById(req, res) {
+  static async deleteAuthorById(req, res, next) {
     try {
       const id = req.params.id;
       await authors.findByIdAndDelete(id);
       res.status(204).send();
     } catch (error) {
-      res
-        .status(404)
-        .json({ message: `${error.message} - falha ao deletar autor.` });
+      next(error);
     }
   }
 
