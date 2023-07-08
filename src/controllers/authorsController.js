@@ -1,13 +1,14 @@
+import NotFoundError from "../errors/NotFoundError.js";
 import authors from "../models/Author.js";
 
 export default class AuthorsController {
 
-  static async findAllAuthors(_, res) {
+  static async findAllAuthors(_, res, next) {
     try {
       const authorsResult = await authors.find();
       res.status(200).json(authorsResult);
     } catch (error) {
-      res.status(500).json({ message: "Erro interno no servidor" });
+      next(error);
     }
   }
 
@@ -18,9 +19,7 @@ export default class AuthorsController {
       if (author !== null) {
         res.status(200).json(author);
       } else {
-        res
-          .status(404)
-          .json({ message: "Autor não encontrado." });
+        next(new NotFoundError("Autor não encontrado."));
       }
     } catch (error) {
       next(error);
@@ -46,7 +45,11 @@ export default class AuthorsController {
         { $set: body },
         { returnDocument: "after" }
       );
-      res.status(200).json(authorUpdated);
+      if (authorUpdated !== null) {
+        res.status(200).json(authorUpdated);
+      } else {
+        next(new NotFoundError("Autor não encontrado."));
+      }
     } catch (error) {
       next(error);
     }
@@ -55,8 +58,12 @@ export default class AuthorsController {
   static async deleteAuthorById(req, res, next) {
     try {
       const id = req.params.id;
-      await authors.findByIdAndDelete(id);
-      res.status(204).send();
+      const author = await authors.findByIdAndDelete(id);
+      if (author !== null) {
+        res.status(204).send();
+      } else {
+        next(new NotFoundError("Autor não encontrado."));
+      }
     } catch (error) {
       next(error);
     }

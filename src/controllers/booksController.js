@@ -1,3 +1,4 @@
+import NotFoundError from "../errors/NotFoundError.js";
 import books from "../models/Book.js";
 
 export default class BooksController {
@@ -18,9 +19,7 @@ export default class BooksController {
       if (book !== null) {
         res.status(200).json(book);
       } else {
-        res
-          .status(404)
-          .json({ message: "Livro não encontrado." });
+        next(new NotFoundError("Livro não encontrado."));
       }
     } catch (error) {
       next(error);
@@ -31,7 +30,11 @@ export default class BooksController {
     try {
       const publisher = req.query.publisher;
       const book = await books.find({"publisher": publisher}, {});
-      res.status(200).json(book);
+      if (book !== null) {
+        res.status(200).json(book);
+      } else {
+        next(new NotFoundError("Livro não encontrado."));
+      }
     } catch (error) {
       next(error);
     }
@@ -52,7 +55,11 @@ export default class BooksController {
       const id = req.params.id;
       const body = req.body;
       const book = await books.findByIdAndUpdate(id, { $set: body}, { returnDocument: "after" });
-      res.status(200).json(book);
+      if (book !== null) {
+        res.status(200).json(book);
+      } else {
+        next(new NotFoundError("Livro não encontrado."));
+      }
     } catch (error) {
       next(error);
     }
@@ -61,8 +68,12 @@ export default class BooksController {
   static async deleteBookById(req, res, next) {
     try {
       const id = req.params.id;
-      await books.findByIdAndDelete(id);
-      res.status(204).send();
+      const book = await books.findByIdAndDelete(id);
+      if (book !== null) {
+        res.status(204).send();
+      } else {
+        next(new NotFoundError("Livro não encontrado."));
+      }
     } catch (error) {
       next(error);
     }
