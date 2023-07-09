@@ -1,5 +1,5 @@
 import NotFoundError from "../errors/NotFoundError.js";
-import { books } from "../models/index.js";
+import { authors, books } from "../models/index.js";
 
 export default class BooksController {
 
@@ -26,14 +26,14 @@ export default class BooksController {
     }
   }
 
-  static async findBookByPublisher(req, res, next) {
+  static async findBooksByFilter(req, res, next) {
     try {
-      const publisher = req.query.publisher;
-      const book = await books.find({"publisher": publisher}, {});
-      if (book !== null) {
-        res.status(200).json(book);
+      const filter = await buildFilter(req.query);
+      if (filter !== null) {
+        const booksList = await books.find(filter, {}).populate("author");
+        res.status(200).json(booksList);
       } else {
-        next(new NotFoundError("Livro não encontrado."));
+        res.status(200).json([]);
       }
     } catch (error) {
       next(error);
@@ -79,4 +79,26 @@ export default class BooksController {
     }
   }
 
+}
+
+async function buildFilter(params) {
+  const { publisher, title, minPages, maxPages, nameAuthor } = params;
+  let filter = {};
+  if (publisher) filter.publisher = publisher;
+  if (title) filter.title = { $regex: title, $options: "i" };
+  
+  if (maxPages || minPages) filter.pages = {};
+  if (maxPages) filter.pages.$lte = maxPages;
+  if (minPages) filter.pages.$gte = minPages;
+
+  if (nameAuthor) {
+    const author = await authors.findOne({ name: nameAuthor });
+    if (author !== null) {
+      const authorId = author._id;
+      filter.author = authorId;
+    } else {
+      filter = null;
+    }
+  }
+  return filter;
 }
