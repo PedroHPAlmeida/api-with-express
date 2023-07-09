@@ -1,4 +1,3 @@
-import BadRequestError from "../errors/BadRequestError.js";
 import NotFoundError from "../errors/NotFoundError.js";
 import { authors, books } from "../models/index.js";
 
@@ -6,20 +5,9 @@ export default class BooksController {
 
   static async findAllBooks(req, res, next) {
     try {
-      let { limit = 5, page = 1 } = req.query;
-
-      limit = parseInt(limit);
-      page = parseInt(page);
-
-      if (limit > 0 && page > 0) {
-        const booksResult = await books.find()
-          .skip(((page - 1) * limit))
-          .limit(limit)  
-          .populate("author");
-        res.status(200).json(booksResult);
-      } else {
-        next(new BadRequestError());
-      }
+      const findBooks = books.find();
+      req.result = findBooks;
+      next();
     } catch (error) {
       next(error);
     }
@@ -28,7 +16,7 @@ export default class BooksController {
   static async findBookById(req, res, next) {
     try {
       const id = req.params.id;
-      const book = await books.findById(id).populate("author", "name");
+      const book = await books.findById(id);
       if (book !== null) {
         res.status(200).json(book);
       } else {
@@ -43,8 +31,9 @@ export default class BooksController {
     try {
       const filter = await buildFilter(req.query);
       if (filter !== null) {
-        const booksList = await books.find(filter, {}).populate("author");
-        res.status(200).json(booksList);
+        const booksList = books.find(filter, {});
+        req.result = booksList;
+        next();
       } else {
         res.status(200).json([]);
       }
